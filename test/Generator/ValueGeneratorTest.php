@@ -12,16 +12,18 @@ use Laminas\Code\Generator\PropertyGenerator;
 use Laminas\Code\Generator\PropertyValueGenerator;
 use Laminas\Code\Generator\ValueGenerator;
 use Laminas\Stdlib\ArrayObject as StdlibArrayObject;
+use LaminasTest\Code\Generator\TestAsset\TestEnum;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 use function fopen;
 use function str_replace;
 
-/**
- * @group Laminas_Code_Generator
- * @group Laminas_Code_Generator_Php
- * @covers \Laminas\Code\Generator\ValueGenerator
- */
+#[CoversClass(ValueGenerator::class)]
+#[Group('Laminas_Code_Generator')]
+#[Group('Laminas_Code_Generator_Php')]
 class ValueGeneratorTest extends TestCase
 {
     public function testDefaultInstance(): void
@@ -40,11 +42,8 @@ class ValueGeneratorTest extends TestCase
         new ValueGenerator(null, ValueGenerator::TYPE_AUTO, ValueGenerator::OUTPUT_MULTIPLE_LINE, $constants);
     }
 
-    /**
-     * @dataProvider constantsType
-     * @param SplArrayObject|StdlibArrayObject $constants
-     */
-    public function testAllowedPossibleConstantsType($constants): void
+    #[DataProvider('constantsType')]
+    public function testAllowedPossibleConstantsType(SplArrayObject|StdlibArrayObject $constants): void
     {
         $valueGenerator = new ValueGenerator(
             null,
@@ -60,7 +59,7 @@ class ValueGeneratorTest extends TestCase
      * @return object[][]
      * @psalm-return array<class-string, array{SplArrayObject|StdlibArrayObject}>
      */
-    public function constantsType(): array
+    public static function constantsType(): array
     {
         return [
             SplArrayObject::class    => [new SplArrayObject()],
@@ -69,10 +68,10 @@ class ValueGeneratorTest extends TestCase
     }
 
     /**
-     * @group #94
-     * @dataProvider validConstantTypes
      * @param string $expectedOutput
      */
+    #[DataProvider('validConstantTypes')]
+    #[Group('#94')]
     public function testValidConstantTypes(PropertyValueGenerator $generator, $expectedOutput): void
     {
         $propertyGenerator = new PropertyGenerator('FOO', $generator);
@@ -81,10 +80,9 @@ class ValueGeneratorTest extends TestCase
     }
 
     /**
-     * @return array
      * @psalm-return non-empty-list<array{PropertyValueGenerator, non-empty-string}>
      */
-    public function validConstantTypes(): array
+    public static function validConstantTypes(): array
     {
         return [
             [
@@ -124,10 +122,9 @@ class ValueGeneratorTest extends TestCase
 
     /**
      * @param string $longOutput
-     * @param array $value
      * @return array
      */
-    protected function generateArrayData($longOutput, array $value)
+    protected static function generateArrayData($longOutput, array $value)
     {
         $shortOutput = str_replace(
             ['array(', ')'],
@@ -164,7 +161,7 @@ class ValueGeneratorTest extends TestCase
      *
      * @return array
      */
-    public function simpleArray()
+    public static function simpleArray()
     {
         $value = ['foo'];
 
@@ -174,7 +171,7 @@ array(
 )
 EOS;
 
-        return $this->generateArrayData($longOutput, $value);
+        return self::generateArrayData($longOutput, $value);
     }
 
     /**
@@ -182,7 +179,7 @@ EOS;
      *
      * @return array
      */
-    public function complexArray()
+    public static function complexArray()
     {
         $value = [
             5,
@@ -222,13 +219,13 @@ array(
 )
 EOS;
 
-        return $this->generateArrayData($longOutput, $value);
+        return self::generateArrayData($longOutput, $value);
     }
 
     /**
      * Data provider for testPropertyDefaultValueCanHandleComplexArrayWCustomIndentOfTypes test
      */
-    public function complexArrayWCustomIndent(): array
+    public static function complexArrayWCustomIndent(): array
     {
         $value = [
             '5bcf08a0a5d20' => [
@@ -302,7 +299,7 @@ array(
 )
 EOS;
 
-        return $this->generateArrayData($longOutput, $value);
+        return self::generateArrayData($longOutput, $value);
     }
 
     /**
@@ -310,7 +307,7 @@ EOS;
      *
      * @return array
      */
-    public function unsortedKeysArray()
+    public static function unsortedKeysArray()
     {
         $value = [
             1 => 'a',
@@ -330,15 +327,14 @@ array(
 )
 EOS;
 
-        return $this->generateArrayData($longOutput, $value);
+        return self::generateArrayData($longOutput, $value);
     }
 
     /**
-     * @dataProvider unsortedKeysArray
      * @param string $type
-     * @param array $value
      * @param string $expected
      */
+    #[DataProvider('unsortedKeysArray')]
     public function testPropertyDefaultValueCanHandleArrayWithUnsortedKeys($type, array $value, $expected)
     {
         $valueGenerator = new ValueGenerator();
@@ -388,12 +384,25 @@ EOS;
         self::assertNotEquals($valueGenerator1->generate(), $valueGenerator2->generate());
     }
 
+    public function testPropertyDefaultValueCanHandleEnums(): void
+    {
+        $valueGenerator1 = new ValueGenerator(
+            TestEnum::Test1,
+            ValueGenerator::TYPE_AUTO,
+            ValueGenerator::OUTPUT_MULTIPLE_LINE
+        );
+
+        $valueGenerator2 = new ValueGenerator(TestEnum::Test2);
+
+        self::assertSame('\LaminasTest\Code\Generator\TestAsset\TestEnum::Test1', $valueGenerator1->generate());
+        self::assertSame('\LaminasTest\Code\Generator\TestAsset\TestEnum::Test2', $valueGenerator2->generate());
+    }
+
     /**
-     * @dataProvider simpleArray
      * @param string $type
-     * @param array $value
      * @param string $expected
      */
+    #[DataProvider('simpleArray')]
     public function testPropertyDefaultValueCanHandleArray($type, array $value, $expected)
     {
         $valueGenerator = new ValueGenerator();
@@ -420,11 +429,10 @@ EOS;
     }
 
     /**
-     * @dataProvider complexArray
      * @param string $type
-     * @param array $value
      * @param string $expected
      */
+    #[DataProvider('complexArray')]
     public function testPropertyDefaultValueCanHandleComplexArrayOfTypes($type, array $value, $expected)
     {
         $valueGenerator = new ValueGenerator();
@@ -435,9 +443,7 @@ EOS;
         self::assertSame($expected, $valueGenerator->generate());
     }
 
-    /**
-     * @dataProvider complexArrayWCustomIndent
-     */
+    #[DataProvider('complexArrayWCustomIndent')]
     public function testPropertyDefaultValueCanHandleComplexArrayWCustomIndentOfTypes(
         string $type,
         array $value,
@@ -452,11 +458,11 @@ EOS;
     }
 
     /**
-     * @group 6023
-     * @dataProvider getEscapedParameters
      * @param string $input
      * @param string $expectedEscapedValue
      */
+    #[DataProvider('getEscapedParameters')]
+    #[Group('6023')]
     public function testEscaping($input, $expectedEscapedValue)
     {
         self::assertSame($expectedEscapedValue, ValueGenerator::escape($input, false));
@@ -467,7 +473,7 @@ EOS;
      *
      * @return string[][]
      */
-    public function getEscapedParameters()
+    public static function getEscapedParameters()
     {
         return [
             ['\\', '\\\\'],
@@ -476,22 +482,70 @@ EOS;
         ];
     }
 
-    public function invalidValue(): Generator
+    public static function invalidValue(): Generator
     {
         yield 'object' => [new DateTime(), DateTime::class];
-        yield 'resource' => [fopen('php://input', 'r'), 'resource'];
+        yield 'resource' => [fopen('php://input', 'r'), 'resource (stream)'];
     }
 
-    /**
-     * @dataProvider invalidValue
-     * @param mixed $value
-     */
-    public function testExceptionInvalidValue($value, string $type): void
+    #[DataProvider('invalidValue')]
+    public function testExceptionInvalidValue(mixed $value, string $type): void
     {
         $valueGenerator = new ValueGenerator($value);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Type "' . $type . '" is unknown or cannot be used');
         $valueGenerator->generate();
+    }
+
+    /**
+     * @param ValueGenerator::OUTPUT_* $outputMode
+     */
+    #[DataProvider('multipleOutputArray')]
+    public function testArrayWithOutputMode(
+        array $array,
+        string $type,
+        string $outputMode,
+        string $output
+    ): void {
+        $valueGenerator = new ValueGenerator($array, $type, $outputMode);
+
+        self::assertSame($valueGenerator->generate(), $output);
+    }
+
+    /**
+     * Data provider for testArrayWithOutputMode test
+     */
+    public static function multipleOutputArray(): array
+    {
+        $array = [
+            'foo' => [
+                'bar',
+            ],
+        ];
+
+        $singleLine   = '[\'foo\' => [\'bar\']]';
+        $multipleLine = <<<EOS
+[
+    'foo' => [
+        'bar',
+    ],
+]
+EOS;
+
+        return [
+            'singleLine'   => [
+                $array,
+                ValueGenerator::TYPE_ARRAY_SHORT,
+                ValueGenerator::OUTPUT_SINGLE_LINE,
+                $singleLine,
+            ],
+            'multipleLine' => [
+                $array,
+                ValueGenerator::TYPE_ARRAY_SHORT,
+                ValueGenerator::OUTPUT_MULTIPLE_LINE,
+                $multipleLine,
+            ],
+        ];
     }
 }

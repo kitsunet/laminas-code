@@ -14,8 +14,12 @@ use Laminas\Code\Generator\MethodGenerator;
 use Laminas\Code\Generator\PromotedParameterGenerator;
 use Laminas\Code\Generator\PropertyGenerator;
 use Laminas\Code\Reflection\ClassReflection;
+use LaminasTest\Code\Generator\TestAsset\ClassWithDnfTypes;
 use LaminasTest\Code\Generator\TestAsset\ClassWithPromotedParameter;
+use LaminasTest\Code\Generator\TestAsset\ReadonlyClassWithPromotedParameter;
 use LaminasTest\Code\TestAsset\FooClass;
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RequiresPhp;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use Serializable;
@@ -27,10 +31,8 @@ use function fclose;
 use function fopen;
 use function key;
 
-/**
- * @group Laminas_Code_Generator
- * @group Laminas_Code_Generator_Php
- */
+#[Group('Laminas_Code_Generator')]
+#[Group('Laminas_Code_Generator_Php')]
 class ClassGeneratorTest extends TestCase
 {
     public function testConstruction(): void
@@ -209,9 +211,7 @@ class ClassGeneratorTest extends TestCase
         $classGenerator->addMethodFromGenerator($methodB);
     }
 
-    /**
-     * @group Laminas-7361
-     */
+    #[Group('Laminas-7361')]
     public function testHasMethod(): void
     {
         $classGenerator = new ClassGenerator();
@@ -230,9 +230,7 @@ class ClassGeneratorTest extends TestCase
         self::assertFalse($classGenerator->hasMethod('methodOne'));
     }
 
-    /**
-     * @group Laminas-7361
-     */
+    #[Group('Laminas-7361')]
     public function testHasProperty(): void
     {
         $classGenerator = new ClassGenerator();
@@ -285,9 +283,7 @@ EOS;
         self::assertSame($expectedOutput, $output, $output);
     }
 
-    /**
-     * @group Laminas-7909
-     */
+    #[Group('Laminas-7909')]
     public function testClassFromReflectionThatImplementsInterfaces(): void
     {
         $reflClass = new ClassReflection(TestAsset\ClassWithInterface::class);
@@ -303,9 +299,7 @@ EOS;
         self::assertStringContainsString($expectedClassDef, $code);
     }
 
-    /**
-     * @group Laminas-7909
-     */
+    #[Group('Laminas-7909')]
     public function testClassFromReflectionDiscardParentImplementedInterfaces(): void
     {
         $reflClass = new ClassReflection(TestAsset\NewClassWithInterface::class);
@@ -321,9 +315,7 @@ EOS;
         self::assertStringContainsString($expectedClassDef, $code);
     }
 
-    /**
-     * @group 4988
-     */
+    #[Group('4988')]
     public function testNonNamespaceClassReturnsAllMethods(): void
     {
         require_once __DIR__ . '/../TestAsset/NonNamespaceClass.php';
@@ -333,9 +325,7 @@ EOS;
         self::assertCount(1, $classGenerator->getMethods());
     }
 
-    /**
-     * @group Laminas-9602
-     */
+    #[Group('Laminas-9602')]
     public function testSetextendedclassShouldIgnoreEmptyClassnameOnGenerate(): void
     {
         $classGeneratorClass = new ClassGenerator();
@@ -352,9 +342,7 @@ CODE;
         self::assertSame($expected, $classGeneratorClass->generate());
     }
 
-    /**
-     * @group Laminas-9602
-     */
+    #[Group('Laminas-9602')]
     public function testSetextendedclassShouldNotIgnoreNonEmptyClassnameOnGenerate(): void
     {
         $classGeneratorClass = new ClassGenerator();
@@ -371,9 +359,7 @@ CODE;
         self::assertSame($expected, $classGeneratorClass->generate());
     }
 
-    /**
-     * @group namespace
-     */
+    #[Group('namespace')]
     public function testCodeGenerationShouldTakeIntoAccountNamespacesFromReflection(): void
     {
         $reflClass      = new ClassReflection(TestAsset\ClassWithNamespace::class);
@@ -392,9 +378,7 @@ CODE;
         self::assertSame($expected, $received, $received);
     }
 
-    /**
-     * @group namespace
-     */
+    #[Group('namespace')]
     public function testSetNameShouldDetermineIfNamespaceSegmentIsPresent(): void
     {
         $classGeneratorClass = new ClassGenerator();
@@ -402,9 +386,7 @@ CODE;
         self::assertSame('My\Namespaced', $classGeneratorClass->getNamespaceName());
     }
 
-    /**
-     * @group namespace
-     */
+    #[Group('namespace')]
     public function testPassingANamespacedClassnameShouldGenerateANamespaceDeclaration(): void
     {
         $classGeneratorClass = new ClassGenerator();
@@ -413,9 +395,7 @@ CODE;
         self::assertStringContainsString('namespace My\Namespaced;', $received, $received);
     }
 
-    /**
-     * @group namespace
-     */
+    #[Group('namespace')]
     public function testPassingANamespacedClassnameShouldGenerateAClassnameWithoutItsNamespace(): void
     {
         $classGeneratorClass = new ClassGenerator();
@@ -466,9 +446,7 @@ CODE;
         self::assertFalse($classGenerator->hasUseAlias('My\First\Use\Class'));
     }
 
-    /**
-     * @group Laminas-151
-     */
+    #[Group('Laminas-151')]
     public function testAddUses(): void
     {
         $classGenerator = new ClassGenerator();
@@ -481,9 +459,7 @@ CODE;
         self::assertStringContainsString('use My\Second\Use\Class as MyAlias;', $generated);
     }
 
-    /**
-     * @group 4990
-     */
+    #[Group('4990')]
     public function testAddOneUseTwiceOnlyAddsOne(): void
     {
         $classGenerator = new ClassGenerator();
@@ -497,9 +473,7 @@ CODE;
         self::assertStringContainsString('use My\First\Use\Class;', $generated);
     }
 
-    /**
-     * @group 4990
-     */
+    #[Group('4990')]
     public function testAddOneUseWithAliasTwiceOnlyAddsOne(): void
     {
         $classGenerator = new ClassGenerator();
@@ -631,9 +605,7 @@ CODE;
         self::assertSame($expected, $output);
     }
 
-    /**
-     * @group 6274
-     */
+    #[Group('6274')]
     public function testCanAddConstant(): void
     {
         $classGenerator = new ClassGenerator();
@@ -653,9 +625,7 @@ CODE;
         self::assertSame('value', $defaultValue->getValue());
     }
 
-    /**
-     * @group 6274
-     */
+    #[Group('6274')]
     public function testCanAddConstantsWithArrayOfGenerators(): void
     {
         $classGenerator = new ClassGenerator();
@@ -675,9 +645,7 @@ CODE;
         self::assertSame('value2', $valueY->getValue());
     }
 
-    /**
-     * @group 6274
-     */
+    #[Group('6274')]
     public function testCanAddConstantsWithArrayOfKeyValues(): void
     {
         $classGenerator = new ClassGenerator();
@@ -698,9 +666,7 @@ CODE;
         self::assertSame('value2', $valueY->getValue());
     }
 
-    /**
-     * @group 6274
-     */
+    #[Group('6274')]
     public function testAddConstantThrowsExceptionWithInvalidName(): void
     {
         $classGenerator = new ClassGenerator();
@@ -776,7 +742,7 @@ CODE;
             $classGenerator->addConstant('a', $resource);
 
             $this->fail('Not supposed to be reached');
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             self::assertEmpty($classGenerator->getConstants());
         } finally {
             fclose($resource);
@@ -791,9 +757,7 @@ CODE;
         $classGenerator->addConstant('a', [new stdClass()]);
     }
 
-    /**
-     * @group 6274
-     */
+    #[Group('6274')]
     public function testAddConstantThrowsExceptionOnDuplicate(): void
     {
         $classGenerator = new ClassGenerator();
@@ -813,9 +777,7 @@ CODE;
         self::assertFalse($classGenerator->hasConstant('constantOne'));
     }
 
-    /**
-     * @group 6274
-     */
+    #[Group('6274')]
     public function testAddPropertyIsBackwardsCompatibleWithConstants(): void
     {
         $classGenerator = new ClassGenerator();
@@ -827,9 +789,7 @@ CODE;
         self::assertSame('value1', $valueX->getValue());
     }
 
-    /**
-     * @group 6274
-     */
+    #[Group('6274')]
     public function testAddPropertiesIsBackwardsCompatibleWithConstants(): void
     {
         $constants      = [
@@ -850,9 +810,7 @@ CODE;
         self::assertSame('value2', $valueY->getValue());
     }
 
-    /**
-     * @group 6274
-     */
+    #[Group('6274')]
     public function testConstantsAddedFromReflection(): void
     {
         $reflector      = new ClassReflection(TestAsset\TestClassWithManyProperties::class);
@@ -864,9 +822,7 @@ CODE;
         self::assertSame('foo', $constantValue->getValue());
     }
 
-    /**
-     * @group 6274
-     */
+    #[Group('6274')]
     public function testClassCanBeGeneratedWithConstantAndPropertyWithSameName(): void
     {
         $reflector      = new ClassReflection(TestAsset\TestSampleSingleClass::class);
@@ -914,9 +870,7 @@ CODE;
         self::assertSame($contents, $classGenerator->generate());
     }
 
-    /**
-     * @group 6253
-     */
+    #[Group('6253')]
     public function testHereDoc(): void
     {
         $reflector      = new ClassReflection(TestAsset\TestClassWithHeredoc::class);
@@ -1179,9 +1133,7 @@ CODE;
         self::assertCount(0, $overrides);
     }
 
-    /**
-     * @group generate
-     */
+    #[Group('generate')]
     public function testUseTraitGeneration(): void
     {
         $classGenerator = new ClassGenerator();
@@ -1200,9 +1152,7 @@ CODE;
         self::assertSame($output, $classGenerator->generate());
     }
 
-    /**
-     * @group generate
-     */
+    #[Group('generate')]
     public function testTraitGenerationWithAliasesAndOverrides(): void
     {
         $classGenerator = new ClassGenerator();
@@ -1220,7 +1170,6 @@ class myClass
         hisTrait::foo as public test;
         myTrait::bar insteadof hisTrait;
         myTrait::bar insteadof thatTrait;
-
     }
 }
 
@@ -1246,6 +1195,24 @@ EOS;
         self::assertSame($expectedOutput, $output, $output);
     }
 
+    public function testGenerateWithFinalReadonlyFlag(): void
+    {
+        $classGenerator = ClassGenerator::fromArray([
+            'name'  => 'SomeClass',
+            'flags' => ClassGenerator::FLAG_FINAL | ClassGenerator::FLAG_READONLY,
+        ]);
+
+        $expectedOutput = <<<EOS
+final readonly class SomeClass
+{
+}
+
+EOS;
+
+        $output = $classGenerator->generate();
+        self::assertSame($expectedOutput, $output, $output);
+    }
+
     public function testCorrectExtendNames(): void
     {
         $classGenerator = new ClassGenerator();
@@ -1256,9 +1223,7 @@ EOS;
         self::assertStringContainsString('class ClassName extends FooClass', $classGenerator->generate());
     }
 
-    /**
-     * @group 75
-     */
+    #[Group('75')]
     public function testCorrectlyExtendsFullyQualifiedParentClass(): void
     {
         $classGenerator = new ClassGenerator();
@@ -1268,9 +1233,7 @@ EOS;
         self::assertStringContainsString('class ClassName extends \DateTime', $classGenerator->generate());
     }
 
-    /**
-     * @group 75
-     */
+    #[Group('75')]
     public function testCorrectlyExtendsRelativeParentClass(): void
     {
         $classGenerator = new ClassGenerator();
@@ -1279,9 +1242,7 @@ EOS;
         self::assertStringContainsString('class ClassName extends DateTime', $classGenerator->generate());
     }
 
-    /**
-     * @group 75
-     */
+    #[Group('75')]
     public function testCorrectExtendNamesFromGlobalNamespace(): void
     {
         $classGenerator = new ClassGenerator();
@@ -1369,7 +1330,6 @@ EOS;
         self::assertStringContainsString($expected, $classGenerator->generate());
     }
 
-    /** @requires PHP >= 8.1 */
     public function testFinalConstantsAddedFromReflection(): void
     {
         $reflector      = new ClassReflection(TestAsset\ClassWithFinalConst::class);
@@ -1412,7 +1372,6 @@ EOS;
         self::assertSame($expectedOutput, $output, $output);
     }
 
-    /** @requires PHP >= 8.0 */
     public function testGenerateClassWithPromotedConstructorParameter(): void
     {
         $classGenerator = new ClassGenerator();
@@ -1439,7 +1398,6 @@ EOS;
         self::assertEquals($expectedOutput, $classGenerator->generate());
     }
 
-    /** @requires PHP >= 8.0 */
     public function testClassWithPromotedParameterFromReflection(): void
     {
         $classGenerator = ClassGenerator::fromReflection(
@@ -1449,7 +1407,7 @@ EOS;
         $expectedOutput = <<<EOS
 namespace LaminasTest\Code\Generator\TestAsset;
 
-class ClassWithPromotedParameter
+final class ClassWithPromotedParameter
 {
     public function __construct(private string \$promotedParameter)
     {
@@ -1461,7 +1419,6 @@ EOS;
         self::assertEquals($expectedOutput, $classGenerator->generate());
     }
 
-    /** @requires PHP >= 8.0 */
     public function testFailToGenerateClassWithPromotedParameterOnNonConstructorMethod(): void
     {
         $classGenerator = new ClassGenerator();
@@ -1474,5 +1431,51 @@ EOS;
         $classGenerator->addMethod('thisIsNoConstructor', [
             new PromotedParameterGenerator('promotedParameter', 'string'),
         ]);
+    }
+
+    #[RequiresPhp('>= 8.2')]
+    public function testReadonlyClassWithPromotedParameterFromReflection(): void
+    {
+        $classGenerator = ClassGenerator::fromReflection(
+            new ClassReflection(ReadonlyClassWithPromotedParameter::class)
+        );
+
+        $expectedOutput = <<<EOS
+namespace LaminasTest\Code\Generator\TestAsset;
+
+final readonly class ReadonlyClassWithPromotedParameter
+{
+    public function __construct(private string \$promotedParameter)
+    {
+    }
+}
+
+EOS;
+
+        self::assertEquals($expectedOutput, $classGenerator->generate());
+    }
+
+    #[RequiresPhp('>= 8.2')]
+    public function testDnfClass(): void
+    {
+        $classGenerator = ClassGenerator::fromReflection(
+            new ClassReflection(ClassWithDnfTypes::class)
+        );
+
+        // @phpcs:disable Generic.Files.LineLength
+        $expectedOutput = <<<EOS
+namespace LaminasTest\Code\Generator\TestAsset;
+
+final class ClassWithDnfTypes
+{
+    public function __construct(private (\LaminasTest\Code\Generator\TestAsset\ThreeInterface&\LaminasTest\Code\Generator\TestAsset\TwoInterface)|\LaminasTest\Code\Generator\TestAsset\OneInterface \$promotedParameter)
+    {
+    }
+}
+
+EOS;
+        // @phpcs:enable
+
+        self::assertEquals($expectedOutput, $classGenerator->generate());
     }
 }

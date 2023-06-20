@@ -20,7 +20,11 @@ use LaminasTest\Code\TestAsset\NullNullableDefaultHintsClass;
 use LaminasTest\Code\TestAsset\ObjectHintsClass;
 use LaminasTest\Code\TestAsset\Php80Types;
 use LaminasTest\Code\TestAsset\VariadicParametersClass;
+use Namespaced\TypeHint\Bar;
 use Phar;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use stdClass;
@@ -33,12 +37,8 @@ use function ltrim;
 use function strpos;
 use function strtolower;
 
-use const PHP_VERSION_ID;
-
-/**
- * @group Laminas_Code_Generator
- * @group Laminas_Code_Generator_Php
- */
+#[Group('Laminas_Code_Generator')]
+#[Group('Laminas_Code_Generator_Php')]
 class ParameterGeneratorTest extends TestCase
 {
     public function testTypeGetterAndSetterPersistValue()
@@ -116,24 +116,6 @@ class ParameterGeneratorTest extends TestCase
         self::assertSame('\'foo\'', (string) $defaultValue);
     }
 
-    /**
-     * @group 95
-     * @requires PHP < 8.1
-     */
-    public function testFromReflectionGetDefaultValueNotOptional()
-    {
-        $method = new MethodReflection(ParameterClass::class, 'defaultObjectEqualsNullAndNotOptional');
-
-        $params = $method->getParameters();
-
-        self::assertCount(2, $params);
-
-        $firstParameter = ParameterGenerator::fromReflection($params[0]);
-        $valueGenerator = $firstParameter->getDefaultValue();
-        self::assertInstanceOf(ValueGenerator::class, $valueGenerator);
-        self::assertNull($valueGenerator->getSourceContent());
-    }
-
     public function testFromReflectionGetArrayHint()
     {
         $reflectionParameter = $this->getFirstReflectionParameter('fromArray');
@@ -161,10 +143,10 @@ class ParameterGeneratorTest extends TestCase
     }
 
     /**
-     * @dataProvider dataFromReflectionGenerate
      * @param string $methodName
      * @param string $expectedCode
      */
+    #[DataProvider('dataFromReflectionGenerate')]
     public function testFromReflectionGenerate($methodName, $expectedCode)
     {
         $reflectionParameter = $this->getFirstReflectionParameter($methodName);
@@ -177,7 +159,7 @@ class ParameterGeneratorTest extends TestCase
      * @return string[][]
      * @psalm-return non-empty-list<array{non-empty-string, non-empty-string}>
      */
-    public function dataFromReflectionGenerate(): array
+    public static function dataFromReflectionGenerate(): array
     {
         return [
             ['name', '$param'],
@@ -243,9 +225,7 @@ class ParameterGeneratorTest extends TestCase
         self::assertTrue($reflectionOmitDefaultValue->getValue($parameterGenerator));
     }
 
-    /**
-     * @group 4988
-     */
+    #[Group('4988')]
     public function testParameterGeneratorReturnsCorrectTypeForNonNamespaceClasses()
     {
         require_once __DIR__ . '/../TestAsset/NonNamespaceClass.php';
@@ -258,25 +238,21 @@ class ParameterGeneratorTest extends TestCase
         self::assertSame('LaminasTest_Code_NsTest_BarClass', $param->getType());
     }
 
-    /**
-     * @group 5193
-     */
+    #[Group('5193')]
     public function testTypehintsWithNamespaceInNamepsacedClassReturnTypewithBackslash()
     {
         require_once __DIR__ . '/TestAsset/NamespaceTypeHintClass.php';
 
-        $reflClass = new ClassReflection('Namespaced\TypeHint\Bar');
+        $reflClass = new ClassReflection(Bar::class);
         $params    = $reflClass->getMethod('method')->getParameters();
 
         $param = ParameterGenerator::fromReflection($params[0]);
 
-        self::assertSame('OtherNamespace\ParameterClass', $param->getType());
+        self::assertSame(\OtherNamespace\ParameterClass::class, $param->getType());
     }
 
-    /**
-     * @group 6023
-     * @coversNothing
-     */
+    #[Group('6023')]
+    #[CoversNothing]
     public function testGeneratedParametersHaveEscapedDefaultValues()
     {
         $parameter = new ParameterGenerator();
@@ -289,11 +265,11 @@ class ParameterGeneratorTest extends TestCase
     }
 
     /**
-     * @group zendframework/zend-code#29
-     * @dataProvider simpleHints
      * @param string $type
      * @param string $expectedType
      */
+    #[DataProvider('simpleHints')]
+    #[Group('zendframework/zend-code#29')]
     public function testGeneratesSimpleHints($type, $expectedType)
     {
         $parameter = new ParameterGenerator();
@@ -307,7 +283,7 @@ class ParameterGeneratorTest extends TestCase
     /**
      * @return string[][]
      */
-    public function simpleHints()
+    public static function simpleHints()
     {
         return [
             ['callable', 'callable'],
@@ -332,10 +308,10 @@ class ParameterGeneratorTest extends TestCase
     }
 
     /**
-     * @group zendframework/zend-code#29
-     * @dataProvider validClassName
      * @param string $className
      */
+    #[DataProvider('validClassName')]
+    #[Group('zendframework/zend-code#29')]
     public function testTypeHintWithValidClassName($className)
     {
         $parameter = new ParameterGenerator();
@@ -349,7 +325,7 @@ class ParameterGeneratorTest extends TestCase
     /**
      * @return string[][]
      */
-    public function validClassName()
+    public static function validClassName()
     {
         return [
             ['stdClass'],
@@ -368,13 +344,13 @@ class ParameterGeneratorTest extends TestCase
     }
 
     /**
-     * @group zendframework/zend-code#29
-     * @dataProvider reflectionHints
      * @param string      $className
      * @param string      $methodName
      * @param string      $parameterName
      * @param string|null $expectedType
      */
+    #[DataProvider('reflectionHints')]
+    #[Group('zendframework/zend-code#29')]
     public function testTypeHintFromReflection($className, $methodName, $parameterName, $expectedType)
     {
         $parameter = ParameterGenerator::fromReflection(new ParameterReflection(
@@ -392,13 +368,13 @@ class ParameterGeneratorTest extends TestCase
     }
 
     /**
-     * @group zendframework/zend-code#29
-     * @dataProvider reflectionHints
      * @param string      $className
      * @param string      $methodName
      * @param string      $parameterName
      * @param string|null $expectedType
      */
+    #[DataProvider('reflectionHints')]
+    #[Group('zendframework/zend-code#29')]
     public function testTypeHintFromReflectionGeneratedCode($className, $methodName, $parameterName, $expectedType)
     {
         $parameter = ParameterGenerator::fromReflection(new ParameterReflection(
@@ -418,7 +394,7 @@ class ParameterGeneratorTest extends TestCase
     /**
      * @return string[][]
      */
-    public function reflectionHints()
+    public static function reflectionHints()
     {
         $parameters = [
             [InternalHintsClass::class, 'arrayParameter', 'foo', 'array'],
@@ -478,32 +454,24 @@ class ParameterGeneratorTest extends TestCase
             [ObjectHintsClass::class, 'nullDefaultObjectParameter', 'foo', '?object'],
         ];
 
-        $compatibleParameters = array_filter(
-            $parameters,
-            static fn(array $parameter) => PHP_VERSION_ID >= 70200
-                || (
-                    false === strpos($parameter[3], 'object')
-                )
-        );
-
         // just re-organizing the keys so that the phpunit data set makes sense in errors:
         return array_combine(
             array_map(
                 static fn(array $definition) => $definition[0] . '#' . $definition[1],
-                $compatibleParameters
+                $parameters
             ),
-            $compatibleParameters
+            $parameters
         );
     }
 
     /**
-     * @group zendframework/zend-code#29
-     * @dataProvider variadicHints
      * @param string $className
      * @param string $methodName
      * @param string $parameterName
      * @param string $expectedGeneratedSignature
      */
+    #[DataProvider('variadicHints')]
+    #[Group('zendframework/zend-code#29')]
     public function testVariadicArgumentFromReflection(
         $className,
         $methodName,
@@ -522,7 +490,7 @@ class ParameterGeneratorTest extends TestCase
     /**
      * @return string[][]
      */
-    public function variadicHints()
+    public static function variadicHints()
     {
         return [
             [VariadicParametersClass::class, 'firstVariadicParameter', 'foo', '... $foo'],
@@ -548,9 +516,7 @@ class ParameterGeneratorTest extends TestCase
         ];
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     */
+    #[Group('zendframework/zend-code#29')]
     public function testSetGetVariadic()
     {
         $parameter = new ParameterGenerator('foo');
@@ -584,6 +550,19 @@ class ParameterGeneratorTest extends TestCase
         $parameter->setDefaultValue([]);
     }
 
+    public function testAssigningDefaultValueToNonVariadicParameter(): void
+    {
+        $parameter = new ParameterGenerator();
+
+        $parameter->setName('parameter');
+        $parameter->setType('int');
+        $parameter->setPosition(1);
+        $parameter->setVariadic(false);
+        self::assertSame('int $parameter', $parameter->generate());
+        $parameter->setDefaultValue(7);
+        self::assertSame('int $parameter = 7', $parameter->generate());
+    }
+
     public function testMakingParameterVariadicWithExistingDefaultValueThrowsInvalidArgumentException(): void
     {
         $parameter = new ParameterGenerator();
@@ -600,9 +579,20 @@ class ParameterGeneratorTest extends TestCase
         $parameter->setVariadic(true);
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     */
+    public function testMakingParameterNonVariadicWithExistingDefaultValue(): void
+    {
+        $parameter = new ParameterGenerator();
+
+        $parameter->setName('parameter');
+        $parameter->setType('int');
+        $parameter->setPosition(1);
+        $parameter->setDefaultValue(7);
+        self::assertSame('int $parameter = 7', $parameter->generate());
+        $parameter->setVariadic(false);
+        self::assertSame('int $parameter = 7', $parameter->generate());
+    }
+
+    #[Group('zendframework/zend-code#29')]
     public function testGetInternalClassDefaultParameterValue()
     {
         $parameter = ParameterGenerator::fromReflection(new ParameterReflection([Phar::class, 'compress'], 1));
@@ -611,14 +601,13 @@ class ParameterGeneratorTest extends TestCase
     }
 
     /**
-     * @requires PHP >= 8.0
-     * @group laminas/laminas-code#53
-     * @dataProvider php80Methods
      * @psalm-param class-string $className
      * @psalm-param non-empty-string $method
      * @psalm-param positive-int|0 $parameterIndex
      * @psalm-param non-empty-string $expectedGeneratedSignature
      */
+    #[DataProvider('php80Methods')]
+    #[Group('laminas/laminas-code#53')]
     public function testGeneratedSignatureForPhp80ParameterType(
         string $className,
         string $method,
@@ -637,7 +626,7 @@ class ParameterGeneratorTest extends TestCase
     /**
      * @psalm-return non-empty-list<array{class-string, non-empty-string, positive-int|0, string, non-empty-string}>
      */
-    public function php80Methods(): array
+    public static function php80Methods(): array
     {
         return [
             [Php80Types::class, 'mixedType', 0, 'mixed', 'mixed $parameter'],

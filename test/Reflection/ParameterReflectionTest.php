@@ -9,13 +9,13 @@ use LaminasTest\Code\Reflection\TestAsset\ClassWithPromotedParameter;
 use LaminasTest\Code\TestAsset\ClassTypeHintedClass;
 use LaminasTest\Code\TestAsset\DocBlockOnlyHintsClass;
 use LaminasTest\Code\TestAsset\InternalHintsClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use ReflectionType;
 
-/**
- * @group Laminas_Reflection
- * @group Laminas_Reflection_Parameter
- */
+#[Group('Laminas_Reflection')]
+#[Group('Laminas_Reflection_Parameter')]
 class ParameterReflectionTest extends TestCase
 {
     public function testDeclaringClassReturn()
@@ -45,12 +45,8 @@ class ParameterReflectionTest extends TestCase
         self::assertInstanceOf(ClassReflection::class, $parameter->getClass());
     }
 
-    /**
-     * @dataProvider paramType
-     * @param string $param
-     * @param string $type
-     */
-    public function testTypeReturn($param, $type)
+    #[DataProvider('paramType')]
+    public function testTypeReturn(string $param, string $type): void
     {
         $parameter = new Reflection\ParameterReflection(
             [TestAsset\TestSampleClass5::class, 'doSomething'],
@@ -61,9 +57,8 @@ class ParameterReflectionTest extends TestCase
 
     /**
      * This test covers type detection when not all params declared in phpDoc block
-     *
-     * @dataProvider paramTypeWithNotAllParamsDeclared
      */
+    #[DataProvider('paramTypeWithNotAllParamsDeclared')]
     public function testTypeReturnWithNotAllParamsDeclared(string $param, string $type): void
     {
         $parameter = new Reflection\ParameterReflection(
@@ -86,7 +81,7 @@ class ParameterReflectionTest extends TestCase
      * @return string[][]
      * @psalm-return non-empty-list<array{non-empty-string, non-empty-string}>
      */
-    public function paramType(): array
+    public static function paramType(): array
     {
         return [
             ['one', 'int'],
@@ -101,7 +96,7 @@ class ParameterReflectionTest extends TestCase
      * @return string[][]
      * @psalm-return non-empty-list<array{non-empty-string, non-empty-string}>
      */
-    public function paramTypeWithNotAllParamsDeclared(): array
+    public static function paramTypeWithNotAllParamsDeclared(): array
     {
         return [
             ['one', 'string'],
@@ -112,16 +107,14 @@ class ParameterReflectionTest extends TestCase
         ];
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     * @dataProvider reflectionHints
-     * @param string $className
-     * @param string $methodName
-     * @param string $parameterName
-     * @param string $expectedType
-     */
-    public function testGetType($className, $methodName, $parameterName, $expectedType)
-    {
+    #[Group('zendframework/zend-code#29')]
+    #[DataProvider('reflectionHints')]
+    public function testGetType(
+        string $className,
+        string $methodName,
+        string $parameterName,
+        string $expectedType
+    ): void {
         $reflection = new Reflection\ParameterReflection(
             [$className, $methodName],
             $parameterName
@@ -133,16 +126,14 @@ class ParameterReflectionTest extends TestCase
         self::assertSame($expectedType, $type->getName());
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     * @dataProvider reflectionHints
-     * @param string $className
-     * @param string $methodName
-     * @param string $parameterName
-     * @param string $expectedType
-     */
-    public function testDetectType($className, $methodName, $parameterName, $expectedType)
-    {
+    #[Group('zendframework/zend-code#29')]
+    #[DataProvider('reflectionHints')]
+    public function testDetectType(
+        string $className,
+        string $methodName,
+        string $parameterName,
+        string $expectedType
+    ): void {
         $reflection = new Reflection\ParameterReflection(
             [$className, $methodName],
             $parameterName
@@ -159,7 +150,7 @@ class ParameterReflectionTest extends TestCase
     /**
      * @return string[][]
      */
-    public function reflectionHints()
+    public static function reflectionHints()
     {
         return [
             [InternalHintsClass::class, 'arrayParameter', 'foo', 'array'],
@@ -176,14 +167,9 @@ class ParameterReflectionTest extends TestCase
         ];
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     * @dataProvider docBlockHints
-     * @param string $className
-     * @param string $methodName
-     * @param string $parameterName
-     */
-    public function testGetTypeWithDocBlockOnlyTypes($className, $methodName, $parameterName)
+    #[Group('zendframework/zend-code#29')]
+    #[DataProvider('docBlockHints')]
+    public function testGetTypeWithDocBlockOnlyTypes(string $className, string $methodName, string $parameterName): void
     {
         $reflection = new Reflection\ParameterReflection(
             [$className, $methodName],
@@ -193,16 +179,14 @@ class ParameterReflectionTest extends TestCase
         self::assertNull($reflection->getType());
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     * @dataProvider docBlockHints
-     * @param string $className
-     * @param string $methodName
-     * @param string $parameterName
-     * @param string $expectedType
-     */
-    public function testDetectTypeWithDocBlockOnlyTypes($className, $methodName, $parameterName, $expectedType)
-    {
+    #[Group('zendframework/zend-code#29')]
+    #[DataProvider('docBlockHints')]
+    public function testDetectTypeWithDocBlockOnlyTypes(
+        string $className,
+        string $methodName,
+        string $parameterName,
+        string $expectedType
+    ): void {
         $reflection = new Reflection\ParameterReflection(
             [$className, $methodName],
             $parameterName
@@ -214,7 +198,7 @@ class ParameterReflectionTest extends TestCase
     /**
      * @return string[][]
      */
-    public function docBlockHints()
+    public static function docBlockHints()
     {
         return [
             [DocBlockOnlyHintsClass::class, 'arrayParameter', 'foo', 'array'],
@@ -229,7 +213,6 @@ class ParameterReflectionTest extends TestCase
         ];
     }
 
-    /** @requires PHP >= 8.0 */
     public function testPromotedParameter(): void
     {
         $reflection = new Reflection\ParameterReflection(

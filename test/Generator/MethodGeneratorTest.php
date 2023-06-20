@@ -17,6 +17,8 @@ use LaminasTest\Code\TestAsset\NullableReturnTypeHintedClass;
 use LaminasTest\Code\TestAsset\ObjectHintsClass;
 use LaminasTest\Code\TestAsset\Php80Types;
 use LaminasTest\Code\TestAsset\ReturnTypeHintedClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -25,12 +27,8 @@ use function array_map;
 use function array_shift;
 use function array_values;
 
-use const PHP_VERSION_ID;
-
-/**
- * @group Laminas_Code_Generator
- * @group Laminas_Code_Generator_Php
- */
+#[Group('Laminas_Code_Generator')]
+#[Group('Laminas_Code_Generator_Php')]
 class MethodGeneratorTest extends TestCase
 {
     public function testMethodConstructor()
@@ -137,7 +135,6 @@ EOS;
         self::assertSame($target, (string) $methodGenerator);
     }
 
-    /** @requires PHP >= 8.0 */
     public function testCopyMethodSignatureForPromotedParameter(): void
     {
         $ref = new MethodReflection(TestAsset\ClassWithPromotedParameter::class, '__construct');
@@ -196,9 +193,7 @@ EOS;
         self::assertSame($target, (string) $methodGenerator);
     }
 
-    /**
-     * @group Laminas-6444
-     */
+    #[Group('Laminas-6444')]
     public function testMethodWithStaticModifierIsEmitted()
     {
         $methodGenerator = new MethodGenerator();
@@ -216,9 +211,7 @@ EOS;
         self::assertSame($expected, $methodGenerator->generate());
     }
 
-    /**
-     * @group Laminas-6444
-     */
+    #[Group('Laminas-6444')]
     public function testMethodWithFinalModifierIsEmitted()
     {
         $methodGenerator = new MethodGenerator();
@@ -235,9 +228,7 @@ EOS;
         self::assertSame($expected, $methodGenerator->generate());
     }
 
-    /**
-     * @group Laminas-6444
-     */
+    #[Group('Laminas-6444')]
     public function testMethodWithFinalModifierIsNotEmittedWhenMethodIsAbstract()
     {
         $methodGenerator = new MethodGenerator();
@@ -252,9 +243,7 @@ EOS;
         self::assertSame($expected, $methodGenerator->generate());
     }
 
-    /**
-     * @group Laminas-7205
-     */
+    #[Group('Laminas-7205')]
     public function testMethodCanHaveDocBlock()
     {
         $methodGeneratorProperty = new MethodGenerator(
@@ -277,9 +266,7 @@ EOS;
         self::assertSame($expected, $methodGeneratorProperty->generate());
     }
 
-    /**
-     * @group Laminas-7268
-     */
+    #[Group('Laminas-7268')]
     public function testDefaultValueGenerationDoesNotIncludeTrailingSemicolon()
     {
         $method  = new MethodGenerator('setOptions');
@@ -321,11 +308,10 @@ EOS;
     }
 
     /**
-     * @dataProvider returnsReferenceValues
-     * @param bool|string|int $value
      * @param bool $expected
      */
-    public function testCreateFromArrayWithReturnsReference($value, $expected): void
+    #[DataProvider('returnsReferenceValues')]
+    public function testCreateFromArrayWithReturnsReference(bool|string|int $value, $expected): void
     {
         $methodGenerator = MethodGenerator::fromArray([
             'name'             => 'SampleMethod',
@@ -341,7 +327,7 @@ EOS;
      *     bool
      * }>
      */
-    public function returnsReferenceValues(): array
+    public static function returnsReferenceValues(): array
     {
         return [
             [true, true],
@@ -378,9 +364,7 @@ CODE;
         self::assertInstanceOf(DocBlockGenerator::class, $methodGenerator->getDocBlock());
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     */
+    #[Group('zendframework/zend-code#29')]
     public function testSetReturnType()
     {
         $methodGenerator = new MethodGenerator();
@@ -397,9 +381,7 @@ PHP;
         self::assertSame($expected, $methodGenerator->generate());
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     */
+    #[Group('zendframework/zend-code#29')]
     public function testSetReturnTypeWithNull()
     {
         $methodGenerator = new MethodGenerator();
@@ -417,12 +399,12 @@ PHP;
     }
 
     /**
-     * @group zendframework/zend-code#29
-     * @dataProvider returnTypeHintClasses
      * @param string $className
      * @param string $methodName
      * @param string $expectedReturnSignature
      */
+    #[DataProvider('returnTypeHintClasses')]
+    #[Group('zendframework/zend-code#29')]
     public function testFrom($className, $methodName, $expectedReturnSignature)
     {
         $methodGenerator = MethodGenerator::fromReflection(new MethodReflection($className, $methodName));
@@ -434,9 +416,9 @@ PHP;
      * @return string[][]
      * @psalm-return list<array{class-string, non-empty-string, non-empty-string}>
      */
-    public function returnTypeHintClasses()
+    public static function returnTypeHintClasses()
     {
-        $parameters = [
+        return [
             [ReturnTypeHintedClass::class, 'voidReturn', 'void'],
             [ReturnTypeHintedClass::class, 'arrayReturn', 'array'],
             [ReturnTypeHintedClass::class, 'callableReturn', 'callable'],
@@ -470,17 +452,9 @@ PHP;
             [Php80Types::class, 'unionType', '\\' . Php80Types::class . '|\\' . stdClass::class],
             [Php80Types::class, 'staticType', 'static'],
         ];
-
-        return array_values(array_filter(
-            $parameters,
-            static fn(array $parameter) => PHP_VERSION_ID >= 80000
-                || $parameter[0] !== Php80Types::class
-        ));
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     */
+    #[Group('zendframework/zend-code#29')]
     public function testByRefReturnType()
     {
         $methodGenerator = new MethodGenerator('foo');
@@ -494,9 +468,7 @@ PHP;
         self::assertStringMatchesFormat('%Apublic function foo()%A', $methodGenerator->generate());
     }
 
-    /**
-     * @group zendframework/zend-code#29
-     */
+    #[Group('zendframework/zend-code#29')]
     public function testFromByReferenceMethodReflection()
     {
         $methodGenerator = MethodGenerator::fromReflection(
@@ -507,13 +479,12 @@ PHP;
     }
 
     /**
-     * @requires PHP >= 8.0
-     * @group laminas/laminas-code#53
-     * @dataProvider php80Methods
      * @psalm-param class-string $className
      * @psalm-param non-empty-string $method
      * @psalm-param non-empty-string $expectedGeneratedSignature
      */
+    #[DataProvider('php80Methods')]
+    #[Group('laminas/laminas-code#53')]
     public function testGeneratedReturnTypeForPhp80ReturnType(
         string $className,
         string $method,
@@ -531,7 +502,7 @@ PHP;
     /**
      * @psalm-return non-empty-list<array{class-string, non-empty-string, non-empty-string, non-empty-string}>
      */
-    public function php80Methods(): array
+    public static function php80Methods(): array
     {
         return [
             [Php80Types::class, 'mixedType', 'mixed', 'mixed'],

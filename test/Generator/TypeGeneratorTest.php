@@ -5,6 +5,10 @@ namespace LaminasTest\Code\Generator;
 use Laminas\Code\Exception\InvalidArgumentException;
 use Laminas\Code\Generator\GeneratorInterface;
 use Laminas\Code\Generator\TypeGenerator;
+use Laminas\Code\Generator\TypeGenerator\AtomicType;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 use function array_combine;
@@ -13,13 +17,12 @@ use function array_map;
 use function class_implements;
 use function ltrim;
 use function str_replace;
+use function str_starts_with;
 use function strpos;
 
-/**
- * @group zendframework/zend-code#29
- * @covers \Laminas\Code\Generator\TypeGenerator
- * @covers \Laminas\Code\Generator\TypeGenerator\AtomicType
- */
+#[Group('zendframework/zend-code#29')]
+#[CoversClass(TypeGenerator::class)]
+#[CoversClass(AtomicType::class)]
 class TypeGeneratorTest extends TestCase
 {
     public function testIsAGenerator()
@@ -27,38 +30,27 @@ class TypeGeneratorTest extends TestCase
         self::assertContains(GeneratorInterface::class, class_implements(TypeGenerator::class));
     }
 
-    /**
-     * @dataProvider validType
-     * @param string $typeString
-     * @param string $expectedReturnType
-     */
-    public function testFromValidTypeString($typeString, $expectedReturnType)
+    #[DataProvider('validType')]
+    public function testFromValidTypeString(string $typeString, string $expectedReturnType): void
     {
         $generator = TypeGenerator::fromTypeString($typeString);
 
         self::assertSame($expectedReturnType, $generator->generate());
     }
 
-    /**
-     * @dataProvider validType
-     * @param string $typeString
-     * @param string $expectedReturnType
-     */
-    public function testStringCastFromValidTypeString($typeString, $expectedReturnType)
+    #[DataProvider('validType')]
+    public function testStringCastFromValidTypeString(string $typeString, string $expectedReturnType): void
     {
         $generator = TypeGenerator::fromTypeString($typeString);
 
         self::assertSame(
-            str_replace(['|\\', '&\\'], ['|', '&'], ltrim($expectedReturnType, '?\\')),
+            str_replace(['|\\', '&\\', '(\\'], ['|', '&', '('], ltrim($expectedReturnType, '?\\')),
             $generator->__toString()
         );
     }
 
-    /**
-     * @dataProvider invalidType
-     * @param string $typeString
-     */
-    public function testRejectsInvalidTypeString($typeString)
+    #[DataProvider('invalidType')]
+    public function testRejectsInvalidTypeString(string $typeString): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -72,7 +64,7 @@ class TypeGeneratorTest extends TestCase
      *            is that this library still supports generating code that is compatible with PHP 7,
      *            and therefore we cannot normalize nullable types to use `|null`, for now.
      */
-    public function validType()
+    public static function validType()
     {
         $valid = [
             ['\\foo', '\\foo'],
@@ -186,13 +178,23 @@ class TypeGeneratorTest extends TestCase
             ['null|foo', '\\foo|null'],
             ['foo|bar|null', '\\bar|\\foo|null'],
 
-            // The `false` type can only be used in combination with other types
+            // Standalone `false` type
+            ['false', 'false'],
             ['foo|false', '\\foo|false'],
             ['string|false', 'string|false'],
             ['string|false|null', 'string|false|null'],
 
             // `false` + `null` requires a third type
             ['Foo|false|null', '\\Foo|false|null'],
+
+            // The `true` type
+            ['foo|true', '\\foo|true'],
+            ['string|true', 'string|true'],
+            ['true', 'true'],
+            ['true|null', 'true|null'],
+
+            // Standalone `null` type
+            ['null', 'null'],
 
             // The `static` type should not be turned into a FQCN
             ['static', 'static'],
@@ -214,6 +216,7 @@ class TypeGeneratorTest extends TestCase
             // Union types may be composed by FQCN and non-FQCN
             ['\\Foo\\Bar&Baz\\Tab', '\\Baz\\Tab&\\Foo\\Bar'],
             ['Foo\\Bar&\\Baz\\Tab', '\\Baz\\Tab&\\Foo\\Bar'],
+            ['(foo&bar)|baz|null', '(\\bar&\\foo)|\\baz|null'],
         ];
 
         return array_combine(
@@ -231,14 +234,14 @@ class TypeGeneratorTest extends TestCase
     {
         return array_filter(
             $this->validType(),
-            static fn(array $pair) => 0 === strpos($pair[1], '\\')
+            static fn(array $pair) => str_starts_with($pair[1], '\\')
         );
     }
 
     /**
      * @return string[][]
      */
-    public function invalidType()
+    public static function invalidType()
     {
         $invalid = [
             [''],
@@ -398,14 +401,11 @@ class TypeGeneratorTest extends TestCase
             ['never&null'],
             ['never&Foo'],
             ['never&\\foo'],
-
-            // `false` and `null` must always be used as part of a union type
-            ['null'],
-            ['false'],
             ['?null'],
-            ['?false'],
-            ['false|null'],
-            ['null|false'],
+
+            // `false` and `true` cannot be used together
+            ['true|false'],
+            ['false|true'],
 
             // Duplicate types are rejected
             ['A|A'],
@@ -422,6 +422,14 @@ class TypeGeneratorTest extends TestCase
             ['string|string|null'],
             ['string|null|string'],
             ['null|string|string'],
+
+            // DNF types must include parenthesis
+            ['foo&bar|baz|null'],
+            ['(foo&bar|baz|null'],
+            ['foo&bar)|baz|null'],
+            ['(foo&bar)'],
+            ['(foo|bar)'],
+            ['(foo|bar)|baz'],
         ];
 
         return array_combine(
